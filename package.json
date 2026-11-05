@@ -1,0 +1,22 @@
+{
+  "name": "Relay",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+  "dev:api": "pnpm --filter @relay/api dev",
+  "dev:web": "pnpm --filter web dev",
+  "dev": "pnpm --parallel --filter @relay/api --filter web dev"
+},
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "devEngines": {
+    "packageManager": {
+      "name": "pnpm",
+      "version": "^11.9.0",
+      "onFail": "download"
+    }
+  },
+  "type": "module"
+}
