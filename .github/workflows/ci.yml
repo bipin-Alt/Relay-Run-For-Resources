@@ -1,0 +1,51 @@
+name: Relay CI
+
+on:
+  push:
+    branches: [ "master" ]
+  pull_request:
+    branches: [ "master" ]
+
+jobs:
+  build:
+
+    runs-on: ubuntu-latest
+
+    strategy:
+      matrix:
+        node-version: [22.x]
+        # See supported Node.js release schedule at https://nodejs.org/en/about/releases/
+
+    steps:
+      - name: Checkout repository 
+        uses: actions/checkout@v4
+
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v4
+        with:
+         vesion: 11.9.0 
+        
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: pnpm
+
+      - name: Install Dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: API Typecheck
+        run: pnpm --filter @relay/api typecheck
+      
+      - name: Web Typecheck
+        run: pnpm --filter web typecheck
+      
+      - name: Web lint
+        run: pnpm --filter web lint
+
+      - name: API build
+        run: pnpm --filter @relay/api build
+
+      - name: Web build
+        run: pnpm --filter web build
+
