@@ -69,9 +69,3 @@ jobs:
       - name: Web build
         run: pnpm --filter web build
 
-  Integration: 
-    runs-on: ubuntu-latest
-    needs: [api,web]
-
-  ### Steps the integration we'll do this later
-
