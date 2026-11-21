@@ -4,10 +4,10 @@
   "description": "",
   "main": "index.js",
   "scripts": {
-  "dev:api": "pnpm --filter @relay/api dev",
-  "dev:web": "pnpm --filter web dev",
-  "dev": "pnpm --parallel --filter @relay/api --filter web dev"
-},
+    "dev:api": "pnpm --filter @relay/api dev",
+    "dev:web": "pnpm --filter web dev",
+    "dev": "pnpm --parallel --filter @relay/api --filter web dev"
+  },
   "keywords": [],
   "author": "",
   "license": "ISC",
@@ -18,5 +18,8 @@
       "onFail": "download"
     }
   },
-  "type": "module"
+  "type": "module",
+  "devDependencies": {
+    "@types/node": "^26.6.6"
+  }
 }
