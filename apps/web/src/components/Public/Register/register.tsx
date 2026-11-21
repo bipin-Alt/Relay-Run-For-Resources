@@ -1,12 +1,74 @@
+"use client";
 import Link from "next/link";
-import { Zap, ArrowRight, Lock, Mail, User, } from "lucide-react";
+import { Zap, ArrowRight, Lock, Mail, User, Eye, EyeOff } from "lucide-react";
 import Image from "next/image";
+import { useState } from "react";
 
 export default function RegisterPage() {
+  const [showPassword, setShowPassword] = useState(false);
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
+  const [feedback, setFeedback] = useState<{
+    type: "error" | "success";
+    message: string;
+  } | null>(null);
+
+  // Registration handling function sending request to the backend//
+  async function HandleRegistration(e: React.SubmitEvent<HTMLFormElement>) {
+    e.preventDefault();
+    setFeedback(null);
+
+    const form = e.currentTarget;
+    const formData = new FormData(form);
+
+    if (formData.get("password") !== formData.get("confirm-password")) {
+      setFeedback({
+        type: "error",
+        message: "Passwords didn't matched..",
+      });
+      return;
+    }
+
+    try {
+      const response = await fetch("/api/Auth/register", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          name: formData.get("name"),
+          email: formData.get("email"),
+          password: formData.get("password"),
+          confirmPassword: formData.get("confirm-password"),
+        }),
+      });
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        setFeedback({
+          type: "error",
+          message: data.message || "Something went wrong. Please try again.",
+        });
+        console.log(data.message);
+        return;
+      }
+
+      setFeedback({
+        type: "success",
+        message: data.message || "Account created successfully.",
+      });
+      form.reset();
+      console.log(data);
+    } catch (error) {
+      setFeedback({
+        type: "error",
+        message: "Network error. Please try again.",
+      });
+      console.log(error);
+    }
+  }
+
   return (
     <div className="min-h-[calc(100vh-5rem)] flex items-center justify-center px-4 py-12 bg-zinc-950 text-zinc-100">
       <div className="w-full max-w-md space-y-8 bg-zinc-900/60 border border-zinc-800/80 p-8 rounded-2xl shadow-xl shadow-black/40 backdrop-blur-md">
-        
         {/* Header / Branding */}
         <div className="text-center space-y-2">
           <div className="inline-flex items-center justify-center w-12 h-12 rounded-xl bg-linear-to-br from-amber-500 to-orange-600 shadow-lg shadow-amber-500/20 mb-2">
@@ -22,19 +84,19 @@ export default function RegisterPage() {
 
         {/* OAuth Social Logins */}
         <div className="grid grid-cols-2 gap-3">
-          <button 
+          <button
             type="button"
             className="flex items-center justify-center gap-2 py-2.5 px-4 rounded-xl border border-zinc-800 bg-zinc-900/80 hover:bg-zinc-800 text-sm font-medium text-zinc-200 transition-colors"
           >
-             <Image 
-                src="/GitHub_Invertocat_White_Clearspace.svg"
-                alt="GitHub"
-                width={18}
-                height={18}
-                />
+            <Image
+              src="/GitHub_Invertocat_White_Clearspace.svg"
+              alt="GitHub"
+              width={18}
+              height={18}
+            />
             GitHub
           </button>
-          <button 
+          <button
             type="button"
             className="flex items-center justify-center gap-2 py-2.5 px-4 rounded-xl border border-zinc-800 bg-zinc-900/80 hover:bg-zinc-800 text-sm font-medium text-zinc-200 transition-colors"
           >
@@ -69,7 +131,20 @@ export default function RegisterPage() {
         </div>
 
         {/* Registration Form */}
-        <form className="space-y-4">
+        <form className="space-y-4" onSubmit={HandleRegistration}>
+          {feedback && (
+            <div
+              role="alert"
+              className={`px-4 py-2.5 rounded-xl text-xs font-medium border ${
+                feedback.type === "error"
+                  ? "bg-red-500/10 border-red-500/30 text-red-400"
+                  : "bg-emerald-500/10 border-emerald-500/30 text-emerald-400"
+              }`}
+            >
+              {feedback.message}
+            </div>
+          )}
+
           <div className="space-y-1">
             <label className="text-xs font-semibold text-zinc-300">
               Full Name
@@ -77,6 +152,7 @@ export default function RegisterPage() {
             <div className="relative">
               <User className="w-4 h-4 absolute left-3.5 top-1/2 -translate-y-1/2 text-zinc-500" />
               <input
+                name="name"
                 type="text"
                 placeholder="Alex Mercer"
                 className="w-full pl-10 pr-4 py-2.5 rounded-xl bg-zinc-900 border border-zinc-800 text-sm text-zinc-100 placeholder-zinc-500 focus:outline-none focus:border-amber-500 focus:ring-1 focus:ring-amber-500 transition-colors"
@@ -91,6 +167,7 @@ export default function RegisterPage() {
             <div className="relative">
               <Mail className="w-4 h-4 absolute left-3.5 top-1/2 -translate-y-1/2 text-zinc-500" />
               <input
+                name="email"
                 type="email"
                 placeholder="student@university.edu"
                 className="w-full pl-10 pr-4 py-2.5 rounded-xl bg-zinc-900 border border-zinc-800 text-sm text-zinc-100 placeholder-zinc-500 focus:outline-none focus:border-amber-500 focus:ring-1 focus:ring-amber-500 transition-colors"
@@ -105,29 +182,56 @@ export default function RegisterPage() {
             <div className="relative">
               <Lock className="w-4 h-4 absolute left-3.5 top-1/2 -translate-y-1/2 text-zinc-500" />
               <input
-                type="password"
+                name="password"
+                type={showPassword ? "text" : "password"}
                 placeholder="Minimum 8 characters"
-                className="w-full pl-10 pr-4 py-2.5 rounded-xl bg-zinc-900 border border-zinc-800 text-sm text-zinc-100 placeholder-zinc-500 focus:outline-none focus:border-amber-500 focus:ring-1 focus:ring-amber-500 transition-colors"
+                className="w-full pl-10 pr-10 py-2.5 rounded-xl bg-zinc-900 border border-zinc-800 text-sm text-zinc-100 placeholder-zinc-500 focus:outline-none focus:border-amber-500 focus:ring-1 focus:ring-amber-500 transition-colors"
               />
+              <button
+                type="button"
+                onClick={() => setShowPassword((prev) => !prev)}
+                aria-label={showPassword ? "Hide password" : "Show password"}
+                className="absolute right-3.5 top-1/2 -translate-y-1/2 text-zinc-500 hover:text-zinc-300 transition-colors"
+              >
+                {showPassword ? (
+                  <EyeOff className="w-4 h-4" />
+                ) : (
+                  <Eye className="w-4 h-4" />
+                )}
+              </button>
             </div>
           </div>
 
-          <div className="flex items-center gap-2 pt-1">
-            <input
-              type="checkbox"
-              id="terms"
-              className="w-4 h-4 rounded border-zinc-800 bg-zinc-900 text-amber-500 focus:ring-amber-500 focus:ring-offset-zinc-950"
-            />
-            <label htmlFor="terms" className="text-xs text-zinc-400">
-              I agree to the{" "}
-              <Link href="/terms" className="text-amber-500 hover:underline">
-                Terms of Service
-              </Link>{" "}
-              and{" "}
-              <Link href="/privacy" className="text-amber-500 hover:underline">
-                Privacy Policy
-              </Link>
+          {/* Registration Confirm Password */}
+          <div className="space-y-1">
+            <label className="text-xs font-semibold text-zinc-300">
+              Confirm Password
             </label>
+            <div className="relative">
+              <Lock className="w-4 h-4 absolute left-3.5 top-1/2 -translate-y-1/2 text-zinc-500" />
+              <input
+                name="confirm-password"
+                type={showConfirmPassword ? "text" : "password"}
+                placeholder="Minimum 8 characters"
+                className="w-full pl-10 pr-10 py-2.5 rounded-xl bg-zinc-900 border border-zinc-800 text-sm text-zinc-100 placeholder-zinc-500 focus:outline-none focus:border-amber-500 focus:ring-1 focus:ring-amber-500 transition-colors"
+              />
+              <button
+                type="button"
+                onClick={() => setShowConfirmPassword((prev) => !prev)}
+                aria-label={
+                  showConfirmPassword
+                    ? "Hide confirm password"
+                    : "Show confirm password"
+                }
+                className="absolute right-3.5 top-1/2 -translate-y-1/2 text-zinc-500 hover:text-zinc-300 transition-colors"
+              >
+                {showConfirmPassword ? (
+                  <EyeOff className="w-4 h-4" />
+                ) : (
+                  <Eye className="w-4 h-4" />
+                )}
+              </button>
+            </div>
           </div>
 
           <button
@@ -149,7 +253,6 @@ export default function RegisterPage() {
             Sign in
           </Link>
         </p>
-
       </div>
     </div>
   );
