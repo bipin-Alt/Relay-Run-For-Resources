@@ -1,26 +1,20 @@
-import Fastify from "fastify";
+'use strict'
 
-const app = Fastify({
-  logger: true,
+import { createApp } from "./app.js";
+
+const server = createApp({
+  logger : {
+    level:'info',
+     transport : {
+        target : 'pino-pretty'
+     }
+  }
 });
 
-app.get("/health", async () => {
-  return {
-    status: "ok",
-    service: "relay-api",
-  };
-});
-
-const start = async () => {
-  try {
-    await app.listen({
-      port: 4000,
-      host: "0.0.0.0",
-    });
-  } catch (error) {
-    app.log.error(error);
+server.listen({ port: 4000, host:'0.0.0.0' }, (err : Error | null , address:String)=>{
+  if(err){
+    server.log.error(err);
     process.exit(1);
   }
-};
-
-start();
+  server.log.info(`Server is listening at ${address}`)
+})
