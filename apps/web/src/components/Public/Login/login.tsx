@@ -1,12 +1,67 @@
+"use client";
 import Link from "next/link";
-import { Zap, ArrowRight, Lock, Mail } from "lucide-react";
+import { useState } from "react";
+import { Zap, ArrowRight, Lock, Mail, Eye, EyeOff } from "lucide-react";
 import Image from "next/image";
 
 export default function Login() {
+  const [feedback, setFeedback] = useState<{
+    type: "error" | "success";
+    message: string;
+  } | null>(null);
+
+   const [showPassword, setShowPassword] = useState(false);
+
+  async function HandleLogin(e: React.SubmitEvent<HTMLFormElement>) {
+    e.preventDefault();
+    setFeedback(null);
+
+    const form = e.currentTarget;
+
+    try {
+      const formData = new FormData(form);
+
+      const response = await fetch("/api/Auth/login", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          email: formData.get("email"),
+          password: formData.get("password"),
+        }),
+      });
+
+      const data = await response.json();
+      
+      console.log(data);
+      console.log(data.message);
+      
+      if (!response.ok) {
+        setFeedback({
+          type: "error",
+          message: data.message || "Something went wrong. Please try again.",
+        });
+        console.log(data.message);
+        return;
+      }
+
+      setFeedback({
+        type: "success",
+        message: data.message || "Logged in successfully.",
+      });
+      form.reset();
+      console.log(data);
+    } catch (error) {
+      setFeedback({
+        type: "error",
+        message: "Network error. Please try again.",
+      });
+      console.log(error);
+    }
+  }
+
   return (
     <div className="min-h-[calc(100vh-5rem)] flex items-center justify-center px-4 py-12 bg-zinc-950 text-zinc-100">
       <div className="w-full max-w-md space-y-8 bg-zinc-900/60 border border-zinc-800/80 p-8 rounded-2xl shadow-xl shadow-black/40 backdrop-blur-md">
-        
         {/* Header / Branding */}
         <div className="text-center space-y-2">
           <div className="inline-flex items-center justify-center w-12 h-12 rounded-xl bg-linear-to-br from-amber-500 to-orange-600 shadow-lg shadow-amber-500/20 mb-2">
@@ -22,19 +77,19 @@ export default function Login() {
 
         {/* OAuth Social Logins */}
         <div className="grid grid-cols-2 gap-3">
-          <button 
+          <button
             type="button"
             className="flex items-center justify-center gap-2 py-2.5 px-4 rounded-xl border border-zinc-800 bg-zinc-900/80 hover:bg-zinc-800 text-sm font-medium text-zinc-200 transition-colors"
           >
-           <Image 
-            src="/GitHub_Invertocat_White_Clearspace.svg"
-            alt="GitHub"
-            width={18}
-            height={18}
+            <Image
+              src="/GitHub_Invertocat_White_Clearspace.svg"
+              alt="GitHub"
+              width={18}
+              height={18}
             />
             GitHub
           </button>
-          <button 
+          <button
             type="button"
             className="flex items-center justify-center gap-2 py-2.5 px-4 rounded-xl border border-zinc-800 bg-zinc-900/80 hover:bg-zinc-800 text-sm font-medium text-zinc-200 transition-colors"
           >
@@ -69,7 +124,20 @@ export default function Login() {
         </div>
 
         {/* Credentials Form */}
-        <form className="space-y-4">
+        <form className="space-y-4" onSubmit={HandleLogin}>
+          {feedback && (
+            <div
+              role="alert"
+              className={`px-4 py-2.5 rounded-xl text-xs font-medium border ${
+                feedback.type === "error"
+                  ? "bg-red-500/10 border-red-500/30 text-red-400"
+                  : "bg-emerald-500/10 border-emerald-500/30 text-emerald-400"
+              }`}
+            >
+              {feedback.message}
+            </div>
+          )}
+
           <div className="space-y-1">
             <label className="text-xs font-semibold text-zinc-300">
               Email Address
@@ -77,6 +145,7 @@ export default function Login() {
             <div className="relative">
               <Mail className="w-4 h-4 absolute left-3.5 top-1/2 -translate-y-1/2 text-zinc-500" />
               <input
+                name="email"
                 type="email"
                 placeholder="student@university.edu"
                 className="w-full pl-10 pr-4 py-2.5 rounded-xl bg-zinc-900 border border-zinc-800 text-sm text-zinc-100 placeholder-zinc-500 focus:outline-none focus:border-amber-500 focus:ring-1 focus:ring-amber-500 transition-colors"
@@ -99,10 +168,23 @@ export default function Login() {
             <div className="relative">
               <Lock className="w-4 h-4 absolute left-3.5 top-1/2 -translate-y-1/2 text-zinc-500" />
               <input
-                type="password"
+                name="password"
+                type={ showPassword? "text":"password"}
                 placeholder="••••••••"
-                className="w-full pl-10 pr-4 py-2.5 rounded-xl bg-zinc-900 border border-zinc-800 text-sm text-zinc-100 placeholder-zinc-500 focus:outline-none focus:border-amber-500 focus:ring-1 focus:ring-amber-500 transition-colors"
+                className="w-full pl-10 pr-10 py-2.5 rounded-xl bg-zinc-900 border border-zinc-800 text-sm text-zinc-100 placeholder-zinc-500 focus:outline-none focus:border-amber-500 focus:ring-1 focus:ring-amber-500 transition-colors"
               />
+              <button
+                type="button"
+                onClick={() => setShowPassword((prev) => !prev)}
+                aria-label={showPassword ? "Hide password" : "Show password"}
+                className="absolute right-3.5 top-1/2 -translate-y-1/2 text-zinc-500 hover:text-zinc-300 transition-colors"
+              >
+                {showPassword ? (
+                  <EyeOff className="w-4 h-4" />
+                ) : (
+                  <Eye className="w-4 h-4" />
+                )}
+              </button>
             </div>
           </div>
 
@@ -117,7 +199,7 @@ export default function Login() {
 
         {/* Footer Toggle */}
         <p className="text-center text-xs text-zinc-400">
-         {"Don't have an account ? "}
+          {"Don't have an account ? "}
           <Link
             href="/register"
             className="text-amber-500 hover:text-amber-400 font-semibold transition-colors"
@@ -125,7 +207,6 @@ export default function Login() {
             Register here
           </Link>
         </p>
-
       </div>
     </div>
   );
